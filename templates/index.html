@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Explorer</title>
+    <meta name="description" content="Explore and search the latest Google Cloud BigQuery release notes. Easily filter, search, and tweet about updates.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="glow-bg">
+        <div class="glow-1"></div>
+        <div class="glow-2"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="header-logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#logo-grad-1)"/>
+                        <path d="M2 17L12 22L22 17" stroke="url(#logo-grad-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="url(#logo-grad-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs>
+                            <linearGradient id="logo-grad-1" x1="2" y1="2" x2="22" y2="12" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#4f46e5"/>
+                                <stop offset="1" stop-color="#3b82f6"/>
+                            </linearGradient>
+                            <linearGradient id="logo-grad-2" x1="2" y1="12" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#3b82f6"/>
+                                <stop offset="1" stop-color="#06b6d4"/>
+                            </linearGradient>
+                            <linearGradient id="logo-grad-3" x1="2" y1="7" x2="22" y2="17" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#6366f1"/>
+                                <stop offset="1" stop-color="#ec4899"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="header-title">BigQuery Release Explorer</h1>
+                    <p class="header-subtitle">Stay sync'd with Google BigQuery product updates and share them on X</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div id="status-badge" class="status-badge">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Checking...</span>
+                </div>
+                <button id="refresh-btn" class="btn btn-primary" title="Refresh Release Notes">
+                    <svg id="refresh-icon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Counter Overview (Dynamic glass card) -->
+        <section id="overview-bar" class="overview-bar">
+            <div class="stat-card">
+                <span class="stat-label">Total Days</span>
+                <span id="stat-total-days" class="stat-value">-</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total Updates</span>
+                <span id="stat-total-updates" class="stat-value">-</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Features</span>
+                <span id="stat-features" class="stat-value text-emerald">-</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Announcements</span>
+                <span id="stat-announcements" class="stat-value text-blue">-</span>
+            </div>
+        </section>
+
+        <!-- Search and Filter Section -->
+        <section class="filter-section glass-card">
+            <div class="search-box">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="search-input" placeholder="Search keywords (e.g. 'Gemini', 'JSON', 'performance')..." aria-label="Search release notes">
+                <button id="clear-search" class="clear-btn" style="display: none;">&times;</button>
+            </div>
+            
+            <div class="filter-group">
+                <span class="filter-label">Filter by type:</span>
+                <div class="filter-chips" id="filter-chips">
+                    <button class="chip active" data-type="all">All Updates</button>
+                    <button class="chip" data-type="Feature">Features</button>
+                    <button class="chip" data-type="Announcement">Announcements</button>
+                    <button class="chip" data-type="Changed">Changed</button>
+                    <button class="chip" data-type="Fixed">Fixed</button>
+                    <button class="chip" data-type="Deprecation">Deprecations</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Release Notes Timeline Grid -->
+        <main class="feed-section">
+            <div id="loading-state" class="loading-state">
+                <div class="huge-spinner"></div>
+                <p>Fetching latest release notes from Google Cloud...</p>
+            </div>
+            
+            <div id="error-state" class="error-state" style="display: none;">
+                <div class="error-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <h3 class="error-title">Failed to load release notes</h3>
+                <p id="error-msg" class="error-msg">Something went wrong while connecting to the backend API.</p>
+                <button id="retry-btn" class="btn btn-secondary">
+                    <span>Retry Fetching</span>
+                </button>
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <h3>No matching updates found</h3>
+                <p>Try adjusting your search keywords or filter settings.</p>
+            </div>
+
+            <!-- Notes list -->
+            <div id="notes-container" class="notes-container"></div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>BigQuery Release Explorer • Built using Flask, Vanilla JS &amp; CSS</p>
+            <p><a href="https://docs.cloud.google.com/feeds/bigquery-release-notes.xml" target="_blank" rel="noopener noreferrer">Original RSS Feed Source</a></p>
+        </footer>
+    </div>
+
+    <!-- Tweet Composer Modal -->
+    <div id="tweet-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2>Compose Tweet</h2>
+                <button id="close-modal" class="close-modal-btn">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Twitter/X Mock Card -->
+                <div class="twitter-preview-card">
+                    <div class="tweet-user-info">
+                        <div class="tweet-avatar">BQ</div>
+                        <div class="tweet-user-meta">
+                            <span class="tweet-display-name">BigQuery News</span>
+                            <span class="tweet-username">@BigQueryRelease</span>
+                        </div>
+                        <div class="x-logo">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="tweet-textarea-wrapper">
+                        <textarea id="tweet-textarea" rows="6" placeholder="What's happening?"></textarea>
+                    </div>
+                    
+                    <div class="tweet-attached-link" id="tweet-attached-link-box">
+                        <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                        <span id="tweet-link-text"></span>
+                    </div>
+                </div>
+                
+                <div class="modal-actions-row">
+                    <div class="char-counter-wrapper">
+                        <svg class="progress-ring" width="28" height="28">
+                            <circle class="progress-ring-bg" stroke="#1f2937" stroke-width="3" fill="transparent" r="10" cx="14" cy="14" />
+                            <circle id="progress-ring-circle" class="progress-ring-indicator" stroke="#3b82f6" stroke-width="3" fill="transparent" r="10" cx="14" cy="14" />
+                        </svg>
+                        <span id="char-counter">0 / 280</span>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="copy-tweet-btn" class="btn btn-secondary">
+                            <svg class="icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            <span id="copy-btn-text">Copy Text</span>
+                        </button>
+                        <button id="post-tweet-btn" class="btn btn-tweet">
+                            <svg class="icon btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            <span>Tweet on X</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
