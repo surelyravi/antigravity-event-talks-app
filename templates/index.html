@@ -149,6 +149,9 @@
                 </svg>
                 <h3>No matching updates found</h3>
                 <p>Try adjusting your search keywords or filter settings.</p>
+                <button id="reset-filters-btn" class="btn btn-secondary" style="margin-top: 16px;">
+                    <span>Reset Search &amp; Filters</span>
+                </button>
             </div>
 
             <!-- Notes list -->
@@ -228,6 +231,9 @@
         </div>
     </div>
     
+    <!-- Global Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

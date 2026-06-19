@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     fetchReleaseNotes(false);
     setupEventListeners();
+    
+    // Connection status indicators
+    window.addEventListener('online', () => showToast("Internet connection restored. Back online!", "success"));
+    window.addEventListener('offline', () => showToast("Internet connection lost. You are offline.", "error"));
 });
 
 // Event Listeners Registration
@@ -146,6 +150,53 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Reset filters button click in empty state
+    const resetFiltersBtn = document.getElementById('reset-filters-btn');
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', () => {
+            const searchInput = document.getElementById('search-input');
+            const clearSearchBtn = document.getElementById('clear-search');
+            if (searchInput) searchInput.value = '';
+            if (clearSearchBtn) clearSearchBtn.style.display = 'none';
+            
+            const chips = document.querySelectorAll('.chip');
+            chips.forEach(c => c.classList.remove('active'));
+            const allChip = document.querySelector('.chip[data-type="all"]');
+            if (allChip) allChip.classList.add('active');
+            
+            renderNotes();
+            showToast("Filters reset successfully.", "info");
+        });
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        const searchInput = document.getElementById('search-input');
+        const tweetModal = document.getElementById('tweet-modal');
+        
+        // '/' key focuses search (only if not inside form inputs/textareas)
+        if (e.key === '/' && document.activeElement !== searchInput && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
+            e.preventDefault();
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
+            }
+        }
+        
+        // Escape clears search focus or closes modal
+        if (e.key === 'Escape') {
+            if (tweetModal && tweetModal.style.display === 'flex') {
+                hideTweetModal();
+            } else if (searchInput && document.activeElement === searchInput) {
+                searchInput.value = '';
+                const clearSearchBtn = document.getElementById('clear-search');
+                if (clearSearchBtn) clearSearchBtn.style.display = 'none';
+                searchInput.blur();
+                renderNotes();
+            }
+        }
+    });
 }
 
 // Fetch Data from Flask API
@@ -177,6 +228,9 @@ async function fetchReleaseNotes(forceRefresh = false) {
         // Update stats
         updateStats(data);
         
+        // Update category chip counts
+        updateChipCounts(data);
+        
         // Render data
         renderNotes();
         
@@ -184,9 +238,15 @@ async function fetchReleaseNotes(forceRefresh = false) {
         updateStatusBadge(data);
         
         showError(false);
+
+        // Feedback toast for manual reload
+        if (forceRefresh) {
+            showToast("Release notes synced live!", "success");
+        }
     } catch (error) {
         console.error("Error fetching release notes:", error);
         showError(true, error.message);
+        showToast("Sync failed: " + error.message, "error");
     } finally {
         showLoading(false);
         if (refreshIcon) refreshIcon.classList.remove('spinning');
@@ -291,13 +351,14 @@ function renderNotes() {
             
             let dayItemsHTML = '';
             filteredItems.forEach(item => {
+                const highlightedContent = highlightHTML(item.content_html, searchQuery);
                 dayItemsHTML += `
                     <div class="update-card glass-card" data-type="${item.type}">
                         <div class="card-header-row">
                             <span class="type-tag">${item.type}</span>
                         </div>
                         <div class="card-content">
-                            ${item.content_html}
+                            ${highlightedContent}
                         </div>
                         <div class="card-footer">
                             <button class="card-copy-btn" data-date="${entry.date}" data-type="${item.type}">
@@ -635,5 +696,96 @@ function toggleTheme() {
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             `;
         }
+    }
+}
+
+// ==========================================
+// UX ENHANCEMENTS AND TOAST UTILITIES
+// ==========================================
+
+// Show dynamic toast notifications
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container') || (() => {
+        const div = document.createElement('div');
+        div.id = 'toast-container';
+        div.className = 'toast-container';
+        document.body.appendChild(div);
+        return div;
+    })();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type} glass-card`;
+    
+    let icon = '';
+    if (type === 'success') {
+        icon = `<svg class="icon text-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+    } else if (type === 'error') {
+        icon = `<svg class="icon text-rose" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+    } else {
+        icon = `<svg class="icon text-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+    }
+    
+    toast.innerHTML = `${icon}<span>${message}</span>`;
+    container.appendChild(toast);
+    
+    // Slide out and remove toast after 3 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px) scale(0.95)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Update dynamic chip counts
+function updateChipCounts(data) {
+    if (!data || !data.entries) return;
+    
+    const counts = {
+        all: 0,
+        feature: 0,
+        announcement: 0,
+        changed: 0,
+        fixed: 0,
+        deprecation: 0
+    };
+    
+    data.entries.forEach(entry => {
+        entry.items.forEach(item => {
+            counts.all++;
+            const type = item.type.toLowerCase();
+            if (counts.hasOwnProperty(type)) {
+                counts[type]++;
+            }
+        });
+    });
+    
+    // Update chip texts
+    const chips = document.querySelectorAll('.chip');
+    chips.forEach(chip => {
+        const type = chip.dataset.type;
+        const count = counts[type.toLowerCase()];
+        
+        let displayName = type === 'all' ? 'All Updates' : type + 's';
+        if (type.toLowerCase() === 'deprecation') displayName = 'Deprecations';
+        
+        if (count !== undefined) {
+            chip.textContent = `${displayName} (${count})`;
+        }
+    });
+}
+
+// Safely highlights terms outside HTML tags
+function highlightHTML(html, query) {
+    if (!query) return html;
+    try {
+        const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const regex = new RegExp(`(${escapedQuery})(?![^<>]*>)`, 'gi');
+        return html.replace(regex, '<mark class="highlight">$1</mark>');
+    } catch (e) {
+        console.error("Highlighting regex error:", e);
+        return html;
     }
 }
