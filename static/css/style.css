@@ -959,3 +959,198 @@ h1, h2, h3, h4, .header-title, .stat-value {
         font-size: 12px;
     }
 }
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(15deg);
+    border-color: var(--border-hover);
+}
+
+/* Card Copy Button */
+.card-copy-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition);
+    margin-right: 8px;
+}
+
+.card-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.card-copy-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Light Theme Variables & Overrides */
+body.light-theme {
+    --bg-dark: #f3f4f6;
+    --bg-card: rgba(255, 255, 255, 0.75);
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(0, 0, 0, 0.16);
+    
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    
+    --primary-glow: rgba(99, 102, 241, 0.1);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .glow-1 {
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, rgba(79, 70, 229, 0) 70%);
+}
+
+body.light-theme .glow-2 {
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.04) 0%, rgba(236, 72, 153, 0) 70%);
+}
+
+body.light-theme .header-title {
+    background: linear-gradient(135deg, #111827 40%, #4338ca 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+body.light-theme .btn-secondary {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-primary);
+}
+
+body.light-theme .btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+body.light-theme .theme-toggle-btn {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-primary);
+}
+
+body.light-theme .theme-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+body.light-theme .search-box {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+body.light-theme .search-box input {
+    color: #111827;
+}
+
+body.light-theme .chip {
+    background: rgba(0, 0, 0, 0.02);
+    color: var(--text-secondary);
+}
+
+body.light-theme .chip:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #111827;
+}
+
+body.light-theme .chip.active {
+    background: rgba(99, 102, 241, 0.1);
+    color: #4338ca;
+    border-color: var(--primary);
+}
+
+body.light-theme .card-content {
+    color: #1f2937;
+}
+
+body.light-theme .card-content code {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.02);
+    color: #be185d;
+}
+
+body.light-theme .card-content a {
+    color: #4f46e5;
+    border-bottom-color: rgba(79, 70, 229, 0.4);
+}
+
+body.light-theme .card-content a:hover {
+    color: #4338ca;
+    border-bottom-color: #4338ca;
+}
+
+body.light-theme .card-tweet-btn, 
+body.light-theme .card-copy-btn {
+    border-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-secondary);
+}
+
+body.light-theme .card-tweet-btn:hover, 
+body.light-theme .card-copy-btn:hover {
+    background: rgba(0, 0, 0, 0.03);
+    color: #111827;
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.light-theme .stat-value {
+    color: #111827;
+}
+
+body.light-theme .stat-card {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+body.light-theme .day-title {
+    color: #374151;
+}
+
+body.light-theme .twitter-preview-card {
+    background: #f7f9fa;
+    border-color: #e1e8ed;
+}
+
+body.light-theme .tweet-display-name {
+    color: #0f1419;
+}
+
+body.light-theme .tweet-textarea-wrapper textarea {
+    color: #0f1419;
+}
+
+body.light-theme .btn-tweet {
+    background: #0f1419;
+    color: #ffffff;
+}
+
+body.light-theme .btn-tweet:hover {
+    background: #272c30;
+}
+
+body.light-theme .modal-header {
+    color: #111827;
+}
+
